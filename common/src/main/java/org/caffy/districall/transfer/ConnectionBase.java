@@ -4,12 +4,12 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.netty.channel.Channel;
 import org.caffy.districall.beans.ExceptionWarp;
-import org.caffy.districall.beans.RemoteMethodResponse;
-import org.caffy.districall.interf.ICallback;
-import org.caffy.districall.utils.ImplementationFactory;
 import org.caffy.districall.beans.ExchangeFrame;
 import org.caffy.districall.beans.RemoteMethod;
+import org.caffy.districall.beans.RemoteMethodResponse;
 import org.caffy.districall.exception.RemoteException;
+import org.caffy.districall.interf.ICallback;
+import org.caffy.districall.utils.ImplementationFactory;
 import org.caffy.districall.utils.SingletonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +85,7 @@ public abstract class ConnectionBase {
         int i = 0;
         for (Class<?> aClass : parameterTypes) {
             if (aClass.isInterface()) {
-                final UUID u = UUID.fromString((String) c.getParameters()[i]);
+                final UUID u = (UUID) c.getParameters()[i];
                 InvocationHandler invocationHandler = new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -113,9 +113,7 @@ public abstract class ConnectionBase {
                     frame = new ExchangeFrame(serial, response);
                 } catch (Throwable e) {
                     logger.warn("远程方法抛出异常 {}: {}", method, e.getMessage());
-                    ExceptionWarp warp = new ExceptionWarp();
-                    warp.setType(e.getClass().getName());
-                    warp.setMessage(e.getMessage());
+                    ExceptionWarp warp = ExceptionWarp.warp(e);
                     frame = new ExchangeFrame(serial, warp);
                 }
                 channel.writeAndFlush(frame);
@@ -188,11 +186,15 @@ public abstract class ConnectionBase {
         // 如果方法参数里有接口
         int i = 0;
         for (Class<?> aClass : method.getParameterTypes()) {
-            if (aClass.isInterface()) { // 接口参数替换位对象序号
+            if (aClass.isInterface()) { // 接口参数替换为对象序号
                 UUID id = UUID.randomUUID();
                 interfaceImplementations.put(id, args[i]);
                 args[i] = id;
                 ImplementationFactory.registerImplementation(aClass);
+
+                if (session != null) {    //
+                    onSessionInterface(session, id, args[i]);
+                }
             }
             i++;
         }
@@ -200,6 +202,8 @@ public abstract class ConnectionBase {
         RemoteMethod remoteMethod = new RemoteMethod(session, method, args);
         return postFrameAndWait(method.getReturnType(), remoteMethod, timeout);
     }
+
+    protected abstract void onSessionInterface(UUID session, UUID id, Object arg);
 
     protected void post(long serial, Object data) {
         ExchangeFrame frame = new ExchangeFrame(serial, data);

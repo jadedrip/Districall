@@ -9,6 +9,13 @@ public class ExceptionWarp implements Serializable {
     private String type;
     private String message;
 
+    public static ExceptionWarp warp( Throwable throwable ){
+        ExceptionWarp warp = new ExceptionWarp();
+        warp.setType( throwable.getClass().getName() );
+        warp.setMessage( throwable.getMessage() );
+        return warp;
+    }
+
     public String getType() {
         return type;
     }

@@ -6,12 +6,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import org.caffy.districall.beans.RemoteMethodResponse;
-import org.caffy.districall.transfer.RequestMapper;
-import org.caffy.districall.utils.ImplementationFactory;
+import org.caffy.districall.beans.EmptyResponse;
 import org.caffy.districall.beans.ExchangeFrame;
 import org.caffy.districall.beans.RemoteMethod;
+import org.caffy.districall.beans.RemoteMethodResponse;
 import org.caffy.districall.exception.ProtocolException;
+import org.caffy.districall.transfer.RequestMapper;
+import org.caffy.districall.utils.ImplementationFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,7 @@ public class JsonDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        if( in.readableBytes() ==0 ) return;
+        if (in.readableBytes() == 0) return;
 
         try {
             ByteBufInputStream inputStream = new ByteBufInputStream(in);
@@ -48,10 +49,14 @@ public class JsonDecoder extends ByteToMessageDecoder {
             long id = root.get("id").getAsLong();
             String type = root.get("type").getAsString();
 
-            JsonElement v = root.get("v");
-
             Object object;
-            if ("RemoteMethod".equals(type)) {
+            if (type == null) {
+                RequestMapper.Returned returned = RequestMapper.pop(id);
+                if (returned == null)
+                    throw new ProtocolException();
+                object = new EmptyResponse(returned.callback);
+            } else if ("RemoteMethod".equals(type)) {
+                JsonElement v = root.get("v");
                 object = decodeMethod(id, v.getAsJsonObject());
             } else if ("RemoteMethodResponse".equals(type)) {
                 RequestMapper.Returned returned = RequestMapper.pop(id);
@@ -70,11 +75,11 @@ public class JsonDecoder extends ByteToMessageDecoder {
             } else {
                 ClassLoader loader = JsonDecoder.class.getClassLoader();
                 Class<?> c = loader.loadClass("org.caffy.districall.beans." + type);
+                JsonElement v = root.get("v");
                 object = gson.fromJson(v.getAsJsonObject(), c);
             }
-
             out.add(new ExchangeFrame(id, object));
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error("Decode exception", e);
         }
     }
@@ -104,11 +109,14 @@ public class JsonDecoder extends ByteToMessageDecoder {
 
                 for (int i = 0; i < types.length; i++) {
                     Class<?> type = types[i];
-                    if (type.isInterface())
-                        type = String.class;
                     JsonElement jsonElement = array.get(i);
-                    Object o = gson.fromJson(jsonElement, type);
-                    objects[i] = o;
+                    if (type.isInterface() || type.isAssignableFrom(UUID.class)) {
+                        String s = jsonElement.getAsString();
+                        objects[i] = UUID.fromString(s);
+                    } else {
+                        Object o = gson.fromJson(jsonElement, type);
+                        objects[i] = o;
+                    }
                 }
                 method.setParameters(objects);
             }

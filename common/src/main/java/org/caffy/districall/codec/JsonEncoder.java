@@ -6,10 +6,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import org.caffy.districall.utils.ImplementationFactory;
 import org.caffy.districall.beans.ExchangeFrame;
 import org.caffy.districall.beans.RemoteMethod;
 import org.caffy.districall.beans.RemoteMethodResponse;
+import org.caffy.districall.utils.ImplementationFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,13 @@ public class JsonEncoder extends MessageToByteEncoder<ExchangeFrame> {
         writer.name("parameters");
         writer.beginArray();
         for (Object i : parameters) {
-            gson.toJson(i, i.getClass(), writer);
+            Class<?> a = i.getClass();
+            if (i instanceof UUID) {
+                UUID uuid = (UUID) i;
+                writer.value(uuid.toString());
+            } else {
+                gson.toJson(i, a, writer);
+            }
         }
         writer.endArray();
     }
@@ -46,21 +52,22 @@ public class JsonEncoder extends MessageToByteEncoder<ExchangeFrame> {
         writer.beginObject();
 
         Object msg = frame.getData();
-        assert msg != null;
         writer.name("id").value(frame.getSerial());
-        writer.name("type").value(msg.getClass().getSimpleName());
-        if (msg instanceof RemoteMethod) {
-            encodeMethod(writer, (RemoteMethod) msg);
-        } else if (msg instanceof RemoteMethodResponse) {
-            RemoteMethodResponse v = (RemoteMethodResponse) msg;
-            Object object = v.getObject();
-            if (object != null) {
-                writer.name("o");
-                gson.toJson(object, object.getClass(), writer);
+        if (msg != null) {
+            writer.name("type").value(msg.getClass().getSimpleName());
+            if (msg instanceof RemoteMethod) {
+                encodeMethod(writer, (RemoteMethod) msg);
+            } else if (msg instanceof RemoteMethodResponse) {
+                RemoteMethodResponse v = (RemoteMethodResponse) msg;
+                Object object = v.getObject();
+                if (object != null) {
+                    writer.name("o");
+                    gson.toJson(object, object.getClass(), writer);
+                }
+            } else {
+                writer.name("v");
+                gson.toJson(msg, msg.getClass(), writer);
             }
-        } else {
-            writer.name("v");
-            gson.toJson(msg, msg.getClass(), writer);
         }
 
         writer.endObject();

@@ -7,7 +7,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
-import org.caffy.districall.beans.CreateSessionResponse;
 import org.caffy.districall.beans.ExchangeFrame;
 import org.caffy.districall.codec.JsonDecoder;
 import org.caffy.districall.codec.JsonEncoder;
@@ -47,8 +46,6 @@ class TcpRemoteClient {
     public void setTimeout(int timeout) {
         this.timeout = timeout;
     }
-
-    ConcurrentHashMap<UUID, ICallback<CreateSessionResponse>> createSessionCallback = new ConcurrentHashMap<UUID, ICallback<CreateSessionResponse>>();
 
     void createSession(UUID uuid, String name, Object[] parameters) throws Throwable {
         connection.createSession(uuid, name, parameters, timeout);

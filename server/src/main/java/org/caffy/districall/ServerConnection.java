@@ -53,9 +53,10 @@ class ServerConnection extends ConnectionBase {
                 throw new IllegalAccessException();
             Object o = iFactory.getObject(s.getParameters());
             interfaceImplementations.put(s.getUuid(), o);
-            post( serial, new CreateSessionResponse());
+            post( serial, null);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
+            post( serial, new ExceptionWarp() );
         }
     }
 
@@ -66,5 +67,10 @@ class ServerConnection extends ConnectionBase {
         interfaceImplementations.invalidate(session);
         logger.debug("销毁会话: {}", session);
         post(serial, null);
+    }
+
+    @Override
+    protected void onSessionInterface(UUID session, UUID id, Object arg) {
+        throw new RuntimeException("Not support!"); // 反向接口中再包含接口是不支持的
     }
 }
