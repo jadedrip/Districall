@@ -1,0 +1,8 @@
+rootProject.name = 'districall'
+include 'common'
+include 'server'
+include 'client'
+include 'demoClient'
+include 'demoServer'
+include 'demoCommon'
+

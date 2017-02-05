@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding='utf-8'?>
+<services>
+    <group>
+        <name>districall.IRemoteInterface</name>
+        <name>districall.ISessionTest</name>
+        <server>tcp://127.0.0.1:6000?protocol=Json</server>
+    </group>
+</services>

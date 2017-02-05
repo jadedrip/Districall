@@ -1,0 +1,11 @@
+/.gradle
+/build
+/repos
+/.idea
+/gradle
+/client/build
+/common/build
+/server/build
+/demoClient/build
+/demoCommon/build
+/demoServer/build
