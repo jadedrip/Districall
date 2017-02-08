@@ -11,7 +11,6 @@ import org.caffy.districall.beans.ExchangeFrame;
 import org.caffy.districall.codec.JsonDecoder;
 import org.caffy.districall.codec.JsonEncoder;
 import org.caffy.districall.exception.UnsupportedProtocol;
-import org.caffy.districall.interf.ICallback;
 import org.caffy.districall.utils.UriUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,14 +21,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * 基于 TCP 的客户端服务
  */
 @SuppressWarnings("unused")
-class TcpRemoteClient {
+public class TcpRemoteClient {
     private static final Logger logger = LoggerFactory.getLogger(TcpRemoteClient.class);
     private String host;
     private int port;
@@ -47,11 +45,11 @@ class TcpRemoteClient {
         this.timeout = timeout;
     }
 
-    void createSession(UUID uuid, String name, Object[] parameters) throws Throwable {
+    public void createSession(UUID uuid, String name, Object[] parameters) throws Throwable {
         connection.createSession(uuid, name, parameters, timeout);
     }
 
-    TcpRemoteClient(String connectString, Closeable closed) {
+    public TcpRemoteClient(String connectString, Closeable closed) {
         try {
             URI uri = new URI(connectString);
             host = uri.getHost();
@@ -66,7 +64,7 @@ class TcpRemoteClient {
         this.closed = closed;
     }
 
-    void setThreadPoolExecutor(ThreadPoolExecutor threadPoolExecutor) {
+    public void setThreadPoolExecutor(ThreadPoolExecutor threadPoolExecutor) {
         this.threadPoolExecutor = threadPoolExecutor;
     }
 
@@ -74,7 +72,7 @@ class TcpRemoteClient {
 
     private ChannelPipeline pipeline;
 
-    void start() throws InterruptedException, UnsupportedProtocol {
+    public void start() throws InterruptedException, UnsupportedProtocol {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(workerGroup).channel(NioSocketChannel.class);      // NioSocketChannel is being used to create a client-side Channel.
         //Note that we do not use childOption() here unlike we did with
@@ -112,11 +110,11 @@ class TcpRemoteClient {
         channelFuture.sync();
     }
 
-    Object remoteMethod(UUID key, Method method, Object[] args) throws Throwable {
+    public Object remoteMethod(UUID key, Method method, Object[] args) throws Throwable {
         return connection.inviteRemoteMethod(key, method, args, timeout);
     }
 
-    void destroy(UUID id) throws Throwable {
+    public void destroy(UUID id) throws Throwable {
         connection.destroySession(id);
     }
 }

@@ -47,7 +47,8 @@ public class JsonDecoder extends ByteToMessageDecoder {
             JsonObject root = element.getAsJsonObject();
 
             long id = root.get("id").getAsLong();
-            String type = root.get("type").getAsString();
+            JsonElement typeElement = root.get("type");
+            String type = typeElement == null ? null : typeElement.getAsString();
 
             Object object;
             if (type == null) {

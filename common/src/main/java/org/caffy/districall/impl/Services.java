@@ -13,13 +13,13 @@ public class Services {
     private List<String> servers;
     private ConsistentHash<String> consistentHash;
 
-    synchronized String getService() throws ServiceNotFoundException {
+    public synchronized String getService() throws ServiceNotFoundException {
         if (servers.isEmpty()) return null;
         int i = count++;
         return servers.get(i % servers.size());
     }
 
-    String getService(Object group) throws ServiceNotFoundException {
+    public String getService(Object group) throws ServiceNotFoundException {
         if (group == null) return getService();
         if (servers.isEmpty()) return null;
 

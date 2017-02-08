@@ -1,6 +1,6 @@
 package districall;
 
-import org.caffy.districall.Client;
+import org.caffy.districall.DistricallClient;
 import org.caffy.districall.interf.IServicePool;
 import org.caffy.districall.pool.StaticServicePool;
 import org.xml.sax.SAXException;
@@ -27,7 +27,7 @@ public class ClientTest {
      */
     private static void client() throws NoSuchMethodException, IOException, SAXException {
         IServicePool pool = new StaticServicePool("classpath:services.xml");  // 发现服务
-        Client client = new Client(pool);
+        DistricallClient client = new DistricallClient(pool);
         IRemoteInterface singleton;
         try {
             singleton = client.getSingleton(IRemoteInterface.class);
@@ -39,10 +39,10 @@ public class ClientTest {
             return;
         }
         assert singleton != null;
-         singleton.doSomething();
-         Object myTest;
-         myTest = singleton.myTest("MyTest", 50);
-         System.out.println(myTest);
+        singleton.doSomething();
+        Object myTest;
+        myTest = singleton.myTest("MyTest", 50);
+        System.out.println(myTest);
 
         try {
             // ISession

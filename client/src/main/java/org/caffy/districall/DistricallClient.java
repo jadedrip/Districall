@@ -1,6 +1,8 @@
-package org.caffy.districall.impl;
+package org.caffy.districall;
 
 import org.caffy.districall.exception.UnsupportedProtocol;
+import org.caffy.districall.impl.Services;
+import org.caffy.districall.impl.TcpRemoteClient;
 import org.caffy.districall.interf.IServicePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,18 +26,18 @@ import java.util.concurrent.atomic.AtomicLong;
  * </pre>
  */
 @SuppressWarnings("unused")
-public class ClientRemoteProxyFactory {
-    private static final Logger logger = LoggerFactory.getLogger(ClientRemoteProxyFactory.class);
+public class DistricallClient {
+    private static final Logger logger = LoggerFactory.getLogger(DistricallClient.class);
 
     private IServicePool servicePool = null;
     private ThreadPoolExecutor threadPoolExecutor = null;
 
-    public ClientRemoteProxyFactory(IServicePool servicePool, ThreadPoolExecutor threadPoolExecutor) {
+    public DistricallClient(IServicePool servicePool, ThreadPoolExecutor threadPoolExecutor) {
         this.servicePool = servicePool;
         this.threadPoolExecutor = threadPoolExecutor;
     }
 
-    public ClientRemoteProxyFactory(IServicePool servicePool) {
+    public DistricallClient(IServicePool servicePool) {
         this.servicePool = servicePool;
     }
 
@@ -45,6 +47,9 @@ public class ClientRemoteProxyFactory {
 
     /**
      * 获取一个单例接口
+     * 注意，接口中的每个方法调用，都会顺序的发送到不同服务器上。
+     *
+     * @return 接口代理
      */
     @SuppressWarnings("unchecked")
     public <T> T getSingleton(Class<T> iClass) throws Exception {
@@ -65,11 +70,16 @@ public class ClientRemoteProxyFactory {
             }
         };
 
-        return (T) Proxy.newProxyInstance(ClientRemoteProxyFactory.class.getClassLoader(), new Class[]{iClass}, handler);
+        return (T) Proxy.newProxyInstance(DistricallClient.class.getClassLoader(), new Class[]{iClass}, handler);
     }
 
     /**
-     * 获取一个单例接口
+     * 获取一个单例接口。
+     * 提供服务的远程服务器通过一致性哈希来确定，返回的接口里所有的请求都将发送到同一台服务上。
+     *
+     * @param group 一致性哈希使用的分组值
+     * @return 接口代理
+     * @throws ServiceNotFoundException
      */
     @SuppressWarnings("unchecked")
     public <T> T getSingleton(String group, Class<T> iClass) throws Exception {
@@ -84,7 +94,7 @@ public class ClientRemoteProxyFactory {
             }
         };
 
-        return (T) Proxy.newProxyInstance(ClientRemoteProxyFactory.class.getClassLoader(), new Class[]{iClass}, handler);
+        return (T) Proxy.newProxyInstance(DistricallClient.class.getClassLoader(), new Class[]{iClass}, handler);
     }
 
     interface Destroyable {
@@ -104,7 +114,7 @@ public class ClientRemoteProxyFactory {
     public <T> T createObject(
             String group,
             final Class<T> iClass,
-            Object[] parameters
+            Object... parameters
     ) throws Throwable {
         final String serviceDetail = findService(group, iClass);
         TcpRemoteClient client;

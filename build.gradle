@@ -1,15 +1,19 @@
-apply plugin: 'java'
-
-sourceCompatibility = 1.6
-version = '1.0'
-
 allprojects {
+    group = 'org.caffy.districall'
+    version = '1.0.0-SNAPSHOT'
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+
     [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
     repositories {
+        mavenLocal()
         maven { url 'http://maven.oschina.net/content/groups/public/' }
-    }
-
-    dependencies {
+        mavenCentral()
     }
 }
