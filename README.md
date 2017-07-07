@@ -73,7 +73,7 @@ ISessionTest 同样是通过 @DynamicInterface 注解定义的远程接口。不
 
     public static void main(String[] args) {
         Server server = new Server();
-        server.setServicePool(new ZookeeperServicePool("183.129.172.68"));
+        server.setServicePool(new ZookeeperServicePool("127.0.0.1"));
         try {
             server.start("im.yixin", 6000);     // 扫描包并开始监听端口 
         } catch (Exception e) {
